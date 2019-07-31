@@ -47,7 +47,7 @@ var auth;
          getCollaborateursUsersProjects();
      });
 
-    schedule.scheduleJob({hour: 10, minute:(23)}, function(){
+    schedule.scheduleJob({hour: 8, minute:(30)}, function(){
 
         var str2 = "\n"
         for(var i=1 ; i<=projects.length ; i++)
