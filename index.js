@@ -539,25 +539,4 @@ var auth;
     console.log(task);
  }
 
-        /*//
-        function getDuration(data){
-          var str = data.text.split(/\s+/);
-              for (i=0 ; i<str.length ; i++){
-                matcher(str[i], messageData =>{
-                  console.log("hi")
-                switch(messageData.intent){
-                        case "projectNumber":
-                          var num = parseInt(str, 10)
-                          if(num > 12){
-                            bot.postMessage(data.channel,"pardon, vous devez choisir le numèro de la durée");
-                            break;
-                          }
-                          console.log(num);
-                          duration = num/8;
-                        break;
-                    default :
-                    break;
-                    }
-                  })
-                }
-        }*/
+       
