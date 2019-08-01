@@ -40,7 +40,7 @@ var auth;
     // creation d'un slack bot
     var bot = new SlackBot({
         token: <your token>,
-        name: "test-bot"
+        name: <your bot name>
     });
 
     bot.on("start", function(){
