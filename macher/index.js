@@ -3,12 +3,12 @@ const patterns = require('../patterns');
 const XRegExp = require('xregexp');
 
 let createEntities = (str, pattern) => {
-	return XRegExp.exec(str, XRegExp(pattern, "i"));
+	return XRegExp.exec(str, XRegExp(pattern, "iA"));
 }
 
 let matchPattern = (str, cb) => {
 	let getResult = patterns.find(item => {
-		if(XRegExp.test(str, XRegExp(item.pattern, "i"))) {
+		if(XRegExp.test(str, XRegExp(item.pattern, "iA"))) {
 			return true;
 		}
 	});
