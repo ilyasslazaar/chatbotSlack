@@ -1,12 +1,11 @@
 
 var request = require('request');
-
+const sleep = require('system-sleep');
+const constant = require("./const");
 
 class Request{
 
-    getCollaboratorsUsersProjects(collaborators,users,projects){
-        var username = 'jenun@intempmail.com'
-        var password = 'N0velis'
+    getCollaboratorsUsersProjects(req){
         var obj;
         var userEmail;
         var options;
@@ -15,10 +14,24 @@ class Request{
         var user
 
         options = {
-            url: 'http://recette-novy-api.novelis.io/api/authenticate',
+            url: constant.slack_api_url,
+            method : 'get'
+        }
+
+        request(options, function (err, res, body) {
+            if (err) {
+            console.log(err)
+            return
+            }
+             
+            req.users = JSON.parse(body).members;  
+        })
+
+        options = {
+            url: constant.novy_api_authenticate_url,
             body: JSON.stringify({
-                username: username,
-                password: password
+                username: constant.novy_username,
+                password: constant.novy_password
         }),
 
             headers : { 
@@ -29,32 +42,18 @@ class Request{
 
         request(options, function (err, res, body) {
             if (err) {
-                console.log(err)
+                console.log(err) 
                 return
             }
             strAuth = JSON.parse(body).id_token;
+            console.log(strAuth);
  
 // la deuxième requete 
 
-        options = {
-            url: 'https://slack.com/api/users.list?token=xoxp-687525419360-676190667394-698919274613-3b5b02d68e29f20e6b51670ccf8e2716&pretty=1',
-            method : 'get'
-        }
-
-        request(options, function (err, res, body) {
-            if (err) {
-            console.log(err)
-            return
-            }
-            
-            users = JSON.parse(body).members;
-        })
-
-
-
         auth = "Bearer "+ strAuth;
+        req.auth = auth;
         options = {
-            url: 'http://recette-novy-api.novelis.io/collaborator/api/collaborators?activated=true',
+            url: constant.novy_api_collaborators_url,
             headers : { 
                 'Authorization' : auth
             },
@@ -67,11 +66,11 @@ class Request{
                 return
             }
         
-           collaborators = JSON.parse(body);
+           req.collaborators = JSON.parse(body);
     })
      
     options = {
-        url: 'http://recette-novy-api.novelis.io/collaborator/api/projects?activated=true',
+        url: constant.novy_api_projects_url,
         headers : { 
             'Authorization' : auth,
             'Content-Type' : 'application/json'
@@ -85,13 +84,36 @@ class Request{
             return
         }
   
-    projects = JSON.parse(body);
+    req.projects = JSON.parse(body);
   
     })
 
-    })
+    })    
+
 }
 
+sendAbsences(abssance,auth){
+         var options = {
+                    url: constant.novy_api_absences_url,
+                    headers : { 
+                        'Authorization' : auth,
+                        'Content-Type' : 'application/json'
+                    },
+                    body: abssance,
+                    json:true,
+                    method : 'post'
+                }
+
+                request(options, function (err, res, body) {
+                if (err) {
+                    console.log(err)
+                    return
+                }
+                console.log(abssance);
+                console.log(body);
+  
+        });
+    }    
 }
 
 module.exports = Request;

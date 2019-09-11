@@ -1,11 +1,13 @@
 const SlackBot = require("slackbots");
 const schedule = require('node-schedule');
-const sleep = require('system-sleep')
+const sleep = require('system-sleep');
 var request = require('request');
 var accents = require('remove-accents');
+//var abssance = require('r');
 
 const matcher = require("./macher");
 
+///////////////
 
 const Conges = require('./conges');
 const abssanceType1 = new Conges();
@@ -18,7 +20,7 @@ const webService = new WebService();
 
 const Project = require('./projects');
 const project = new Project();
-
+//const fs = require('fs')
 var options;
 var auth;
 var collaborateurId;
@@ -36,6 +38,13 @@ var task = {
             collaboratorId: [],
             startDate,
             endDate
+            };
+
+var req = {
+            collabortors:null,
+            users:null,
+            projects:null,
+            auth:null
             };
 
 var abssance = {
@@ -57,23 +66,23 @@ var str;
  
     // creation d'un slack bot
     var bot = new SlackBot({
-        token: "xoxb-687525419360-688876395300-W6znSEbhLOJOclpkK261WPnH",
+        token: "xoxb-687525419360-688876395300-sWsn1VpxiM59vLmO4bklRaNz",
         name: "test-bot"
     });
 
     bot.on("start", function(){
-         requests.getCollaboratorsUsersProjects(collaborators,users,projects);
+         requests.getCollaboratorsUsersProjects(req);
          webService.webService();
      });
 
-    schedule.scheduleJob({hour: 8, minute:(44)}, function(){
+    schedule.scheduleJob({hour: 11, minute:(57)}, function(){
 
         var str2 = "\n"
-        for(var i=1 ; i<=projects.length ; i++)
-           str2 = str2+i+"- "+projects[i-1].name+"\n";
-        for(var i=0 ; i<collaborators.length;i++){
+        for(var i=1 ; i<=req.projects.length ; i++)
+           str2 = str2+i+"- "+req.projects[i-1].name+"\n";
+        for(var i=0 ; i<req.collaborators.length;i++){
 
-            var username = getUserName(collaborators[i].email , users);
+            var username = getUserName(req.collaborators[i].email , req.users);
             if(username){
                 bot.postMessageToUser(username,"Bonjour! sur quel projet vous allez travailler aujourd'hui?"+str2);
             }
@@ -86,7 +95,7 @@ var str;
         
         
         if(data.user){
-            getCollaborateurId(collaborators, users, data);
+            getCollaborateurId(req.collaborators, req.users, data);
               if(projectId && task.imputations.length === 0)
                 project.getTaskId(data);
               if(projectId && task.imputations.length !=0){
@@ -109,7 +118,8 @@ var str;
         }
         
         if(data.user){
-            getCollaborateurId(collaborators, users, data);
+
+            getCollaborateurId(req.collaborators, req.users, data);
             if(collaborateurId){
                 handleMessage(data.text , data);
             }else{
@@ -121,7 +131,6 @@ var str;
 
     //fonction du traitement des message
     function handleMessage(message , data) {
-        
         matcher(accents.remove(data.text), messageData =>{
 
                 if(!messageData.intent && !ver1){
@@ -132,7 +141,7 @@ var str;
             });
 
         if(!notUnderstand){
-        
+            // vider la chaine de vérification
             str1 ="";
             str = data.text.split(/\s+/);
 
@@ -179,7 +188,7 @@ var str;
             if(orderName && abssance.abssanceType && !abssance.startDate && !abssance.endDate){
                 ver = 1
                 bot.postMessage(data.channel, "vous n'avez pas encore spécifié la date de début et de fin de votre congé! (mm/jj/aaaa)");
-                for (i=0 ; i<str.length ; i++){
+                for (i=1 ; i<str.length ; i++){
                     abssanceType1.getStartAndEndDat(str[i],data,abssance,str[i-1],ver);
                 }
             }
@@ -187,7 +196,7 @@ var str;
 
             if(orderName && abssance.abssanceType && !abssance.startDate && !ver){
                 bot.postMessage(data.channel, "vous n'avez pas encore spécifié la date de début de votre congé! (mm/jj/aaaa)");
-                for (i=0 ; i<str.length ; i++){
+                for (i=1 ; i<str.length ; i++){
                     abssanceType1.getStartAndEndDat(str[i],data,abssance,str[i-1],ver);
                 }
             }
@@ -213,34 +222,15 @@ var str;
             }
 
             if(orderName && abssance.abssanceType && abssance.startDate && abssance.endDate){
-            bot.postMessage(data.channel, "order : "+orderName+" ; abssanceType : "+abssanceType+" ; startDate : "
-                                          +startDate+" ; endDate : "+endDate )
-            abssance.collaborator = collaborateurId;
-            abssance.comment = "coment";
-            
-            options = {
-                    url: 'http://recette-novy-api.novelis.io/collaborator/api/absences',
-                    headers : { 
-                        'Authorization' : auth,
-                        'Content-Type' : 'application/json'
-                    },
-                    body: abssance,
-                    json:true,
-                    method : 'post'
-                }
-
-                request(options, function (err, res, body) {
-                if (err) {
-                    console.log(err)
-                    return
-                }
+                bot.postMessage(data.channel, "order : "+orderName+" ; abssanceType : "+abssanceType+" ; startDate : "
+                                +startDate+" ; endDate : "+endDate )
+                abssance.collaborator = collaborateurId;
+                abssance.comment = "coment";
                 
-        });
+                requests.sendAbsences(abssance,req.auth);
+                
                 sleep(1000);
         orderName = null;
-        abssance.abssanceType = null;
-        abssance.startDate = null;
-        abssance.endDate = null;
         }
         }
         notUnderstand = null;
@@ -292,7 +282,7 @@ var str;
             i++;
         }
         userEmail = users[i].profile.email;
-
+        
         for(var j=0 ; j<collaborators.length ; j++){
             if(userEmail === collaborators[j].email){
             collaborateurId = collaborators[j].id;
@@ -300,10 +290,12 @@ var str;
             }
             
         }
-
     }
 
-    function getUserName(userEmail, users){
+
+    ///////
+
+    function getUserName(userEmail, users ) {
         var userName;
         var i =0;
 
